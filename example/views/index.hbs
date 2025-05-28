@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>PayNL - POS local ECR example</title>
+    <script src="/public/formDataToJson.js"></script>
+    <script src="/public/index.js"></script>
+    <link href="/public/beercss/min.css" rel="stylesheet">
+    <script type="module" src="/public/beercss/min.js"></script>
+    <script type="module" src="/public/beercss/material-dynamic-colors.min.js"></script>
+    <link rel="stylesheet" href="/public/fontawesome/css/all.min.css" />
+    <style>
+        :root, body.light {
+            --primary: #006874;
+            --on-primary: #ffffff;
+            --primary-container: #97f0ff;
+            --on-primary-container: #001f24;
+            --secondary: #4a6267;
+            --on-secondary: #ffffff;
+            --secondary-container: #cde7ec;
+            --on-secondary-container: #051f23;
+            --tertiary: #525e7d;
+            --on-tertiary: #ffffff;
+            --tertiary-container: #dae2ff;
+            --on-tertiary-container: #0e1b37;
+            --error: #ba1a1a;
+            --on-error: #ffffff;
+            --error-container: #ffdad6;
+            --on-error-container: #410002;
+            --background: #fafdfd;
+            --on-background: #191c1d;
+            --surface: #f8fafa;
+            --on-surface: #191c1d;
+            --surface-variant: #dbe4e6;
+            --on-surface-variant: #3f484a;
+            --outline: #6f797a;
+            --outline-variant: #bfc8ca;
+            --shadow: #000000;
+            --scrim: #000000;
+            --inverse-surface: #2e3132;
+            --inverse-on-surface: #eff1f1;
+            --inverse-primary: #4fd8eb;
+            --surface-dim: #d8dadb;
+            --surface-bright: #f8fafa;
+            --surface-container-lowest: #ffffff;
+            --surface-container-low: #f2f4f4;
+            --surface-container: #eceeef;
+            --surface-container-high: #e6e8e9;
+            --surface-container-highest: #e1e3e3;
+        }
+    </style>
+</head>
+<body class="light" style="height: 100vh">
+
+<div style="margin-left: 50px; display: flex; gap: 20px; align-items: center">
+    <img src="https://www.pay.nl/uploads/1/brands/main_logo.png" width="100px"/>
+    <h4 style="margin-top: 0">PAY.POS Local ECR example</h4>
+</div>
+<div style="display: flex; gap: 25px; margin: 50px; margin-top: 25px; height: calc(100vh - 165px);">
+
+    <article class="border" style="width: 33%; min-width: 200px; max-width: 400px;">
+        <form id="transaction-form">
+            <h5>Terminal discovery</h5>
+
+            <div style="margin-top: 20px">Terminal<span style="color: red">*</span></div>
+            <div class="field suffix border" style="margin-top: 0; margin-bottom: 20px">
+                <select id="terminal-list" onchange="checkTerminals()">
+                    <option disabled>NONE</option>
+                </select>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <nav class="group connected">
+                <button type="button" class="primary left-round" style="flex: 1" onclick="discoverTerminals()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Discover terminals
+                </button>
+                <button type="button" id="btn-connect" disabled class="primary right-round" style="flex: 1" onclick="connectToTerminal()">
+                    <i class="fa-solid fa-network-wired"></i>
+                    Connect to terminal
+                </button>
+            </nav>
+
+            <hr class="large"/>
+
+            <h5>Payment request</h5>
+            <div style="margin-top: 20px">Amount<span style="color: red">*</span></div>
+            <div class="row" style="margin-top: 0">
+                <div class="field suffix border">
+                    <select name="amount[currency]">
+                        <option>EUR</option>
+                        <option>USD</option>
+                        <option>GBP</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="field suffix border" style="flex: 1;">
+                    <i class="fa-solid fa-euro-sign"></i>
+                    <input type="number" name="amount[value]" id="amount" style="text-align: right;" value="0.00" onchange="checkForm()"/>
+                </div>
+            </div>
+
+
+            <nav class="group">
+                <button type="button" id="btn-ping" disabled class="primary left-round right-round" style="flex: 1" onclick="pingTerminal()">
+                    <i class="fa-solid fa-vial"></i>
+                    Ping terminal
+                </button>
+            </nav>
+            <nav class="group connected">
+                <button type="button" id="btn-transaction-start" disabled class="primary left-round" style="flex: 1" onclick="startPayment()">
+                    <i class="fa-solid fa-money-bill"></i>
+                    Start Transaction
+                </button>
+                <button type="button" id="btn-transaction-stop" disabled class="primary right-round" style="flex: 1" onclick="stopPayment()">
+                    <i class="fa-solid fa-x"></i>
+                    Stop Transaction
+                </button>
+            </nav>
+
+            <hr class="large"/>
+            <h5>Transaction history</h5>
+        </form>
+    </article>
+    <article class="border" style="flex: 1; margin-top: 0; overflow: hidden">
+        <h5>Logs</h5>
+        <div id="logs" style="margin-top: 20px; white-space: pre-line; height: 100%; overflow-y: auto; padding-bottom: 20px"></div>
+    </article>
+</div>
+<script>main()</script>
+</body>
+</html>
