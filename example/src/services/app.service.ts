@@ -1,12 +1,18 @@
-import { Injectable, MessageEvent } from '@nestjs/common';
+import {Injectable, MessageEvent} from '@nestjs/common';
 import {Subject} from "rxjs";
 import * as dgram from "node:dgram";
 import * as net from "node:net";
+import * as crypto from 'node:crypto';
 
 const DISCOVERY_PORT = 8889;
 const TCP_PORT = 8888;
 const DISCOVERY_MESSAGE = 'PAY.POS-WHO.IS';
 const DISCOVERY_TIMEOUT = 3000; // 3 seconds
+
+type AuthData = {
+  thCode: string;
+  slCode: string;
+}
 
 @Injectable()
 export class AppService {
@@ -58,6 +64,22 @@ export class AppService {
     });
   }
 
+  public async getSaleLocations() {
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'authorization': `Basic ${Buffer.from(process.env.AT + ':' + process.env.AT_SECRET, 'utf8').toString('base64')}`,
+    });
+
+    try {
+      const response = await fetch('https://rest.pay.nl/v2/services', {headers})
+      return await response.json();
+    } catch (e) {
+      console.error('Failed to fetch sale locations')
+      console.error(e)
+      return null;
+    }
+  }
+
   public connectToTerminal(sessionId: string, ipAddress: string) {
     const stream = this.observables[sessionId];
     if (!stream) {
@@ -79,41 +101,112 @@ export class AppService {
         stream.next({ data: json });
       });
 
+      client.on('close', () => {
+        stream.next({ data: JSON.stringify({disconnected: true }) });
+      })
+
       this.activeConnection[sessionId] = client;
     });
   }
 
-  public async pingDevice(sessionId: string) {
-    const stream = this.observables[sessionId];
-    if (!stream) {
-      console.warn('No observables found for sessionId: ' + sessionId);
-      return;
-    }
-
+  public async pingDevice(sessionId: string, auth: AuthData) {
     const socket = this.activeConnection[sessionId];
     if (!socket) {
       console.warn('No socket found for sessionId: ' + sessionId);
       return;
     }
 
-    const pingMessage = JSON.stringify({ type: 'PING' });
-    socket.write(Buffer.from(pingMessage + '\n'));
+    const message = this.generateMessage({ type: 'PING' }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
   }
 
-  public async startPayment(sessionId: string, data) {
-    const stream = this.observables[sessionId];
-    if (!stream) {
-      console.warn('No observables found for sessionId: ' + sessionId);
-      return;
-    }
-
+  public async startPayment(sessionId: string, data, auth: AuthData) {
     const socket = this.activeConnection[sessionId];
     if (!socket) {
       console.warn('No socket found for sessionId: ' + sessionId);
       return;
     }
 
-    const startPaymentMessage = JSON.stringify({ type: 'TRANSACTION_START', data: JSON.parse(data) });
-    socket.write(Buffer.from(startPaymentMessage + '\n'));
+    const message = this.generateMessage({ type: 'TRANSACTION_START', ...JSON.parse(data) }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  public async stopPayment(sessionId: string, auth: AuthData) {
+    const socket = this.activeConnection[sessionId];
+    if (!socket) {
+      console.warn('No socket found for sessionId: ' + sessionId);
+      return;
+    }
+
+    const message = this.generateMessage({ type: 'TRANSACTION_STOP' }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  public async listHistory(sessionId: string, auth: AuthData) {
+    const socket = this.activeConnection[sessionId];
+    if (!socket) {
+      console.warn('No socket found for sessionId: ' + sessionId);
+      return;
+    }
+
+    const message = this.generateMessage({ type: 'HISTORY_LIST' }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  public async getHistory(sessionId: string, needle: string, auth: AuthData) {
+    const socket = this.activeConnection[sessionId];
+    if (!socket) {
+      console.warn('No socket found for sessionId: ' + sessionId);
+      return;
+    }
+
+    const message = this.generateMessage({ type: 'HISTORY_GET', needle }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  private generateMessage(body: {[key: string]: string}, auth: AuthData): Buffer | undefined {
+    // Deepcopy original message
+    let message = JSON.parse(JSON.stringify(body));
+
+    // get number from thCode & slCode
+    console.log(auth)
+    const key = (auth.thCode + auth.slCode).match(/\d+/g)?.join('');
+    if (!key) {
+      console.error('Failed to construct key');
+      return undefined;
+    }
+
+    message['timestamp'] = Date.now();
+    message['auth'] = crypto
+        .createHmac('sha256', key)
+        .update(JSON.stringify(message))
+        .digest("base64");
+
+    return Buffer.from(JSON.stringify(message) + '\n');
   }
 }

@@ -8,6 +8,7 @@ import {
     Session,
     HttpException,
     HttpStatus,
+    Headers,
     Post, Param, Body
 } from '@nestjs/common';
 import {Session as FastifySession} from '@fastify/secure-session';
@@ -50,6 +51,16 @@ export class AppController {
         return observable;
     }
 
+    @Get('saleLocations')
+    async getSaleLocations() {
+        const locations =  await this.appService.getSaleLocations();
+        if (!locations) {
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        return locations;
+    }
+
     @Get('discover')
     discoverTerminals(@Session() session: FastifySession<PayNlSession>) {
         const sessionId = session.get('id');
@@ -74,24 +85,64 @@ export class AppController {
     }
 
     @Post('ping')
-    async pingTerminal(@Session() session: FastifySession<PayNlSession>) {
+    async pingTerminal(@Session() session: FastifySession<PayNlSession>, @Headers() headers: Headers) {
         const sessionId = session.get('id');
         if (!sessionId) {
             console.warn('Empty sessionId');
             throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
         }
 
-        await this.appService.pingDevice(sessionId);
+        await this.appService.pingDevice(sessionId, this.getAuthData(headers));
     }
 
     @Post('start-payment')
-    async startPayment(@Session() session: FastifySession<PayNlSession>, @Body() body) {
+    async startPayment(@Session() session: FastifySession<PayNlSession>, @Body() body, @Headers() headers: Headers) {
         const sessionId = session.get('id');
         if (!sessionId) {
             console.warn('Empty sessionId');
             throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
         }
 
-        await this.appService.startPayment(sessionId, body);
+        await this.appService.startPayment(sessionId, body, this.getAuthData(headers));
+    }
+
+    @Post('stop-payment')
+    async stopPayment(@Session() session: FastifySession<PayNlSession>, @Headers() headers: Headers) {
+        const sessionId = session.get('id');
+        if (!sessionId) {
+            console.warn('Empty sessionId');
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        await this.appService.stopPayment(sessionId, this.getAuthData(headers));
+    }
+
+    @Post('list-history')
+    async listHistory(@Session() session: FastifySession<PayNlSession>, @Headers() headers: Headers) {
+        const sessionId = session.get('id');
+        if (!sessionId) {
+            console.warn('Empty sessionId');
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        await this.appService.listHistory(sessionId, this.getAuthData(headers));
+    }
+
+    @Post('get-history/:needle')
+    async getHistory(@Session() session: FastifySession<PayNlSession>, @Param('needle') needle: string, @Headers() headers: Headers) {
+        const sessionId = session.get('id');
+        if (!sessionId) {
+            console.warn('Empty sessionId');
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        await this.appService.getHistory(sessionId, needle, this.getAuthData(headers));
+    }
+
+    private getAuthData(headers: Headers) {
+        return {
+            thCode: headers['x-terminal-code'],
+            slCode: headers['x-sale-location-code']
+        }
     }
 }
