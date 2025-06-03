@@ -1,6 +1,6 @@
 <img src="https://www.pay.nl/uploads/1/brands/main_logo.png" width="100px" />
 
-# PAY.POS Local ECR
+# PAY.ECR
 
 ### Requirments:
 - PAY.POS version 1.1.18 or higher
