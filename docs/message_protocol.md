@@ -36,13 +36,13 @@ Be prepared for this.
 If you want to start a transaction, use this message. NOTE: you will receive [`TRANSACTION_EVENT`](#transaction_event) during the transaction
 
 ##### Request
-| **Property**        | **Type/value**               | **Description**                                                                                                           |
-|---------------------|------------------------------|---------------------------------------------------------------------------------------------------------------------------|
-| `type`              | `TRANSACTION_START` (String) |                                                                                                                           |
-| `transaction`       | Object                       | The transaction object (see [Order:Create](https://developer.pay.nl/reference/api_create_order-1) for the possible values |
-| `service`           | Object                       | If you want to use service injection, make sure these values are provided                                                 |
-| `service.serviceId` | String                       |                                                                                                                           |
-| `service.secret`    | String                       |                                                                                                                           |
+| **Property**        | **Type/value**               | **Description**                                                                                                            |
+|---------------------|------------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `type`              | `TRANSACTION_START` (String) |                                                                                                                            |
+| `transaction`       | Object                       | The transaction object (see [Order:Create](https://developer.pay.nl/reference/api_create_order-1) for the possible values) |
+| `service`           | Object                       | If you want to use service injection, make sure these values are provided                                                  |
+| `service.serviceId` | String                       |                                                                                                                            |
+| `service.secret`    | String                       |                                                                                                                            |
 
 #### TRANSACTION_STOP
 If you want to cancel a running transaction, use this
@@ -119,7 +119,7 @@ You can create an order once, update it infinite times, start it once, and needs
 | **Property**        | **Type/value**                           | **Description**                                                                                                                          |
 |---------------------|------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------|
 | `type`              | `ORDER_CREATE` / `ORDER_UPDATE` (String) | Use `ORDER_CREATE` once and use `ORDER_UPDATE` to add or delete new items. ORDER_UPDATE will overwrite the current order in the terminal |
-| `transaction`       | Object                                   | The transaction object (see [Order:Create](https://developer.pay.nl/reference/api_create_order-1) for the possible values                |
+| `transaction`       | Object                                   | The transaction object (see [Order:Create](https://developer.pay.nl/reference/api_create_order-1) for the possible values)               |
 | `service`           | Object                                   | If you want to use service injection, make sure these values are provided                                                                |
 | `service.serviceId` | String                                   |                                                                                                                                          |
 | `service.secret`    | String                                   |                                                                                                                                          |
