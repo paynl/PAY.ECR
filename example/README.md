@@ -1,8 +1,10 @@
 <img src="https://www.pay.nl/uploads/1/brands/main_logo.png" width="100px"/>
 
-# PAY.POS Local ECR
+# PAY.POS Local ECR - Example
 
 ## Project setup
+
+(Make sure you have installed NodeJS LTS)
 
 ```bash
 $ npm install
@@ -13,4 +15,6 @@ $ npm install
 ```bash
 # development
 $ npm run start
+
+# this will run a nodeJS server on http://localhost:3000
 ```
