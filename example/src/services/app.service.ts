@@ -189,24 +189,88 @@ export class AppService {
     socket.write(message);
   }
 
-  private generateMessage(body: {[key: string]: string}, auth: AuthData): Buffer | undefined {
-    // Deepcopy original message
-    let message = JSON.parse(JSON.stringify(body));
-
-    // get number from thCode & slCode
-    console.log(auth)
-    const key = (auth.thCode + auth.slCode).match(/\d+/g)?.join('');
-    if (!key) {
-      console.error('Failed to construct key');
-      return undefined;
+  public async createOrder(sessionId: string, data, auth: AuthData) {
+    const socket = this.activeConnection[sessionId];
+    if (!socket) {
+      console.warn('No socket found for sessionId: ' + sessionId);
+      return;
     }
 
-    message['timestamp'] = Date.now();
-    message['auth'] = crypto
-        .createHmac('sha256', key)
-        .update(JSON.stringify(message))
-        .digest("base64");
+    const message = this.generateMessage({ type: 'ORDER_CREATE', ...JSON.parse(data) }, auth);
+    if (!message) {
+      return;
+    }
 
-    return Buffer.from(JSON.stringify(message) + '\n');
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  public async updateOrder(sessionId: string, data, auth: AuthData) {
+    const socket = this.activeConnection[sessionId];
+    if (!socket) {
+      console.warn('No socket found for sessionId: ' + sessionId);
+      return;
+    }
+
+    const message = this.generateMessage({ type: 'ORDER_UPDATE', ...JSON.parse(data) }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  public async startOrder(sessionId: string, auth: AuthData) {
+    const socket = this.activeConnection[sessionId];
+    if (!socket) {
+      console.warn('No socket found for sessionId: ' + sessionId);
+      return;
+    }
+
+    const message = this.generateMessage({ type: 'ORDER_START' }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  public async stopOrder(sessionId: string, auth: AuthData) {
+    const socket = this.activeConnection[sessionId];
+    if (!socket) {
+      console.warn('No socket found for sessionId: ' + sessionId);
+      return;
+    }
+
+    const message = this.generateMessage({ type: 'ORDER_STOP' }, auth);
+    if (!message) {
+      return;
+    }
+
+    console.log(JSON.parse(message.toString()));
+    socket.write(message);
+  }
+
+  private generateMessage(body: {[key: string]: string}, auth: AuthData): Buffer | undefined {
+    // Deepcopy original message
+    // let message = JSON.parse(JSON.stringify(body));
+    //
+    // // get number from thCode & slCode
+    // console.log(auth)
+    // const key = (auth.thCode + auth.slCode).match(/\d+/g)?.join('');
+    // if (!key) {
+    //   console.error('Failed to construct key');
+    //   return undefined;
+    // }
+    //
+    // message['timestamp'] = Date.now();
+    // message['auth'] = crypto
+    //     .createHmac('sha256', key)
+    //     .update(JSON.stringify(message))
+    //     .digest("base64");
+
+    return Buffer.from(JSON.stringify(body) + '\n');
   }
 }

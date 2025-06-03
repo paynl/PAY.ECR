@@ -139,6 +139,50 @@ export class AppController {
         await this.appService.getHistory(sessionId, needle, this.getAuthData(headers));
     }
 
+    @Post('create-order')
+    async createOrder(@Session() session: FastifySession<PayNlSession>, @Body() body, @Headers() headers: Headers) {
+        const sessionId = session.get('id');
+        if (!sessionId) {
+            console.warn('Empty sessionId');
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        await this.appService.createOrder(sessionId, body, this.getAuthData(headers));
+    }
+
+    @Post('update-order')
+    async updateOrder(@Session() session: FastifySession<PayNlSession>, @Body() body, @Headers() headers: Headers) {
+        const sessionId = session.get('id');
+        if (!sessionId) {
+            console.warn('Empty sessionId');
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        await this.appService.updateOrder(sessionId, body, this.getAuthData(headers));
+    }
+
+    @Post('start-order')
+    async startOrder(@Session() session: FastifySession<PayNlSession>, @Headers() headers: Headers) {
+        const sessionId = session.get('id');
+        if (!sessionId) {
+            console.warn('Empty sessionId');
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        await this.appService.startOrder(sessionId, this.getAuthData(headers));
+    }
+
+    @Post('stop-order')
+    async stopOrder(@Session() session: FastifySession<PayNlSession>, @Headers() headers: Headers) {
+        const sessionId = session.get('id');
+        if (!sessionId) {
+            console.warn('Empty sessionId');
+            throw new HttpException('Forbidden', HttpStatus.FORBIDDEN);
+        }
+
+        await this.appService.stopOrder(sessionId, this.getAuthData(headers));
+    }
+
     private getAuthData(headers: Headers) {
         return {
             thCode: headers['x-terminal-code'],

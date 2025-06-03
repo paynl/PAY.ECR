@@ -60,78 +60,31 @@
 
     <article class="border" style="width: 33%; min-width: 200px; max-width: 400px;">
 
-        <h5>Terminal discovery</h5>
-        <div class="field suffix label border" style="margin-bottom: 0">
-            <select id="terminal-list" onchange="checkTerminals()">
-                <option disabled>NONE</option>
-            </select>
-            <label>Terminal<span style="color: red">*</span></label>
-            <i class="fa-solid fa-chevron-down"></i>
+        <div class="tabs">
+            <a id="terminal-discovery-tab" class="active" onclick="switchTab('terminal-discovery')">Discovery</a>
+            <a id="payment-tab" onclick="switchTab('payment')">Payment</a>
+            <a id="terminal-history-tab" onclick="switchTab('terminal-history')">History</a>
         </div>
-<!--        <div class="field suffix label border" style="margin-bottom: 20px">-->
-<!--            <select id="sale-location-list" onchange="checkTerminals()">-->
-<!--                <option disabled>NONE</option>-->
-<!--            </select>-->
-<!--            <label>Sale location<span style="color: red">*</span></label>-->
-<!--            <i class="fa-solid fa-chevron-down"></i>-->
-<!--        </div>-->
-        <div class="field label border" style="margin-bottom: 0px">
-            <input type="text" id="sale-location-list" onchange="checkTerminals()" value="SL-3712-5292">
-            <label>Sale location<span style="color: red">*</span></label>
-        </div>
-        <nav class="group connected">
-            <button type="button" class="primary left-round" style="flex: 1" onclick="discoverTerminals()">
-                <i class="fa-solid fa-binoculars"></i>
-                Discover terminals
-            </button>
-            <button type="button" id="btn-connect" disabled class="primary right-round" style="flex: 1"
-                    onclick="connectToTerminal()">
-                <i class="fa-solid fa-network-wired"></i>
-                Connect to terminal
-            </button>
-        </nav>
-
-        <hr class="large"/>
-
-        <form id="transaction-form">
-            <h5>Payment request</h5>
-            <div style="margin-top: 20px">Amount<span style="color: red">*</span></div>
-            <div class="row" style="margin-top: 0">
-                <div class="field suffix border">
-                    <select name="transaction[amount][currency]">
-                        <option>EUR</option>
-                        <option>USD</option>
-                        <option>GBP</option>
-                    </select>
-                    <i class="fa-solid fa-chevron-down"></i>
-                </div>
-                <div class="field suffix border" style="flex: 1;">
-                    <i class="fa-solid fa-euro-sign"></i>
-                    <input type="number" name="transaction[amount][value]" id="amount" style="text-align: right;"
-                           value="0.00" onchange="checkForm()"/>
-                </div>
+        <div class="page padding active" id="terminal-discovery-page">
+            <h5>Terminal discovery</h5>
+            <div class="field suffix label border" style="margin-bottom: 0">
+                <select id="terminal-list" onchange="checkTerminals()">
+                    <option disabled>NONE</option>
+                </select>
+                <label>Terminal<span style="color: red">*</span></label>
+                <i class="fa-solid fa-chevron-down"></i>
             </div>
-            <div class="field label border" style="margin-bottom: 0px">
-                <input type="text" name="transaction[reference]" onchange="checkForm()">
-                <label>Reference</label>
-            </div>
-            <div class="field label border">
-                <input type="text" name="transaction[description]" onchange="checkForm()">
-                <label>Description</label>
-            </div>
-            <div style="margin-top: 20px">Service injection</div>
-            <div class="row" style="margin-top: 5px;">
-                <div class="field label border" style="flex: 1">
-                    <input type="text" name="service[serviceId]" onchange="checkForm()" id="sl-code">
-                    <label>SL-code</label>
-                </div>
-                <div class="field label border" style="flex: 1">
-                    <input type="text" name="service[secret]" onchange="checkForm()" id="sl-secret">
-                    <label>Secret</label>
-                </div>
-            </div>
-
-
+            <nav class="group connected">
+                <button type="button" class="primary left-round" style="flex: 1" onclick="discoverTerminals()">
+                    <i class="fa-solid fa-binoculars"></i>
+                    Discover terminals
+                </button>
+                <button type="button" id="btn-connect" disabled class="primary right-round" style="flex: 1"
+                        onclick="connectToTerminal()">
+                    <i class="fa-solid fa-network-wired"></i>
+                    Connect to terminal
+                </button>
+            </nav>
             <nav class="group">
                 <button type="button" id="btn-ping" disabled class="primary left-round right-round" style="flex: 1"
                         onclick="pingTerminal()">
@@ -139,41 +92,110 @@
                     Ping terminal
                 </button>
             </nav>
+        </div>
+        <div class="page padding" id="terminal-history-page">
+            <h5>Transaction history</h5>
+
+            <div class="row">
+                <div class="field label border" style="flex: 1">
+                    <input type="text" id="history-order-id" onchange="checkForm()">
+                    <label>MV-code / OrderId / reference</label>
+                </div>
+            </div>
             <nav class="group connected">
-                <button type="button" id="btn-transaction-start" disabled class="primary left-round" style="flex: 1"
-                        onclick="startPayment()">
-                    <i class="fa-solid fa-money-bill"></i>
-                    Start Transaction
+                <button type="button" id="btn-list-history" disabled class="primary left-round" style="flex: 1"
+                        onclick="listHistory()">
+                    <i class="fa-solid fa-list"></i>
+                    List history
                 </button>
-                <button type="button" id="btn-transaction-stop" disabled class="primary right-round" style="flex: 1"
-                        onclick="stopPayment()">
-                    <i class="fa-solid fa-x"></i>
-                    Stop Transaction
+                <button type="button" id="btn-get-history" disabled class="primary right-round" style="flex: 1"
+                        onclick="getSpecificHistory()">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Get transaction
                 </button>
             </nav>
-        </form>
-        <hr class="large"/>
-        <h5>Transaction history</h5>
-
-        <div class="row">
-            <div class="field label border" style="flex: 1">
-                <input type="text" id="history-order-id" onchange="checkForm()">
-                <label>MV-code / OrderId / reference</label>
-            </div>
         </div>
-        <nav class="group connected">
-            <button type="button" id="btn-list-history" disabled class="primary left-round" style="flex: 1"
-                    onclick="listHistory()">
-                <i class="fa-solid fa-list"></i>
-                List history
-            </button>
-            <button type="button" id="btn-get-history" disabled class="primary right-round" style="flex: 1"
-                    onclick="getSpecificHistory()">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                Get transaction
-            </button>
-        </nav>
+        <div class="page padding" id="payment-page">
+            <form id="transaction-form">
+                <h5>Payment request</h5>
+                <div style="margin-top: 20px">Amount<span style="color: red">*</span></div>
+                <div class="row" style="margin-top: 0">
+                    <div class="field suffix border">
+                        <select name="transaction[amount][currency]">
+                            <option>EUR</option>
+                            <option>USD</option>
+                            <option>GBP</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </div>
+                    <div class="field suffix border" style="flex: 1;">
+                        <i class="fa-solid fa-euro-sign"></i>
+                        <input type="number" name="transaction[amount][value]" id="amount" style="text-align: right;"
+                               value="0.00" onchange="checkForm()"/>
+                    </div>
+                </div>
+                <div class="field label border" style="margin-bottom: 0px">
+                    <input type="text" name="transaction[reference]" onchange="checkForm()">
+                    <label>Reference</label>
+                </div>
+                <div class="field label border">
+                    <input type="text" name="transaction[description]" onchange="checkForm()">
+                    <label>Description</label>
+                </div>
 
+                <div style="margin-top: 10px; width: 100%; display: flex; justify-content: space-between; align-items: center">
+                    Products
+                    <button class="border" onclick="showProductModal(event)"><i class="fa-solid fa-plus"></i></button>
+                </div>
+                <nav class="vertical" id="product-list" style="margin-top: 0">
+                </nav>
+
+                <div style="margin-top: 20px">Service injection</div>
+                <div class="row" style="margin-top: 5px;">
+                    <div class="field label border" style="flex: 1">
+                        <input type="text" name="service[serviceId]" onchange="checkForm()" id="sl-code">
+                        <label>SL-code</label>
+                    </div>
+                    <div class="field label border" style="flex: 1">
+                        <input type="text" name="service[secret]" onchange="checkForm()" id="sl-secret">
+                        <label>Secret</label>
+                    </div>
+                </div>
+
+                <nav class="group connected">
+                    <button type="button" id="btn-transaction-start" disabled class="primary left-round" style="flex: 1"
+                            onclick="startPayment()">
+                        <i class="fa-solid fa-money-bill"></i>
+                        Start Transaction
+                    </button>
+                    <button type="button" id="btn-transaction-stop" disabled class="primary right-round" style="flex: 1"
+                            onclick="stopPayment()">
+                        <i class="fa-solid fa-x"></i>
+                        Stop Transaction
+                    </button>
+                </nav>
+                <nav class="group connected">
+                    <button type="button" id="btn-order-create" disabled class="primary left-round" style="flex: 1"
+                            onclick="createUpdateOrder()">
+                        <i class="fa-solid fa-file-invoice"></i>
+                        Create/update order
+                    </button>
+                    <button type="button" id="btn-order-stop" disabled class="primary right-round" style="flex: 1"
+                            onclick="stopOrder()">
+                        <i class="fa-solid fa-x"></i>
+                        Stop order
+                    </button>
+                </nav>
+                <nav class="group">
+                    <button type="button" id="btn-order-start" disabled class="primary left-round right-round"
+                            style="flex: 1"
+                            onclick="startOrder()">
+                        <i class="fa-solid fa-money-bill"></i>
+                        Start order
+                    </button>
+                </nav>
+            </form>
+        </div>
     </article>
     <article class="border" style="flex: 1; margin-top: 0; overflow: hidden">
         <h5>Logs</h5>
@@ -181,6 +203,41 @@
              style="margin-top: 20px; white-space: pre-line; height: 100%; overflow-y: auto; padding-bottom: 20px"></div>
     </article>
 </div>
+
+<div class="overlay blur" id="product-create-overlay"></div>
+<dialog class="modal" id="product-create-modal">
+    <h5>Create product</h5>
+    <form id="product-form">
+        <div class="field border label">
+            <input type="text" name="description">
+            <label>Description</label>
+        </div>
+        <div style="margin-top: 0">Amount</div>
+        <div class="row" style="margin-top: 0">
+            <div class="field suffix border">
+                <select name="price[currency]">
+                    <option>EUR</option>
+                    <option>USD</option>
+                    <option>GBP</option>
+                </select>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+            <div class="field suffix border" style="flex: 1;">
+                <i class="fa-solid fa-euro-sign"></i>
+                <input type="number" name="price[value]" id="amount" style="text-align: right;"
+                       value="0.00" />
+            </div>
+        </div>
+        <div class="field border label">
+            <input type="number" name="quantity">
+            <label>Quantity</label>
+        </div>
+    </form>
+    <nav class="right-align no-space">
+        <button class="transparent link" onclick="addProduct(true)">Cancel</button>
+        <button class="transparent link" onclick="addProduct(false)">Confirm</button>
+    </nav>
+</dialog>
 <script>main()</script>
 </body>
 </html>
