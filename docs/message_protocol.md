@@ -133,7 +133,7 @@ You can create an order once, update it infinite times, start it once, and needs
 
 #### ORDER_START
 
-In order to transform the order into a payment and start card scan, send the `ORDER_START` message to the terminal
+In order to transform the order into a transaction and start card scan, send the `ORDER_START` message to the terminal
 
 ##### Request
 | **Property**     | **Type/value**          | **Description** |
