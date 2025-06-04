@@ -10,3 +10,6 @@
 ### Getting started
 - [Discovery protocol](./docs/discovery_protocol.md)
 - [Message protocol](./docs/message_protocol.md)
+
+### Order presentation screen
+<img src="./OrderPresentation.png" width="200">
