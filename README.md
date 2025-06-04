@@ -12,4 +12,7 @@
 - [Message protocol](./docs/message_protocol.md)
 
 ### Order presentation screen
+
+Instead of using `TRANSACTION_START`, use `ORDER_CREATE` and `ORDER_UPDATE` to get the following screen:
+
 <img src="./OrderPresentation.png" width="200">
