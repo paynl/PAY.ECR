@@ -5,7 +5,7 @@ let terminalBusy = false
 let orderStarted = false;
 
 function main() {
-    writeLog('INFO', 'Welcome to the PAY.POS local ECR example');
+    writeLog('INFO', 'Welcome to the PAY.POS local ECR example-desktop');
     writeLog('INFO', 'This project shows you how to integrate the local ECR. Start by discovering your terminal locally');
 
     // getSaleLocations();
