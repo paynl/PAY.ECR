@@ -11,6 +11,13 @@
 - [Discovery protocol](./docs/discovery_protocol.md)
 - [Message protocol](./docs/message_protocol.md)
 
+### Examples
+
+This repo also includes example application to show you how to integrate with the LocalECR:
+
+- [Desktop (NodeJS HTTP)](./exampleDesktop)
+- [Mobile (React Native - iOS only)](./examplereactnative)
+
 ### Order presentation screen
 
 Instead of using `TRANSACTION_START`, use `ORDER_CREATE` and `ORDER_UPDATE` to get the following screen:
