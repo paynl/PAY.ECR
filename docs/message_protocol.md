@@ -40,6 +40,7 @@ If you want to start a transaction, use this message. NOTE: you will receive [`T
 |---------------------|------------------------------|----------------------------------------------------------------------------------------------------------------------------|
 | `type`              | `TRANSACTION_START` (String) |                                                                                                                            |
 | `transaction`       | Object                       | The transaction object (see [Order:Create](https://developer.pay.nl/reference/api_create_order-1) for the possible values) |
+| `transaction.type`  | String                       | The type of transaction you want to do, possible options: `PAYMENT`, `REFUND` or `AUTH`                                    |
 | `service`           | Object                       | If you want to use service injection, make sure these values are provided                                                  |
 | `service.serviceId` | String                       |                                                                                                                            |
 | `service.secret`    | String                       |                                                                                                                            |
@@ -62,6 +63,8 @@ During a transaction, you will receive these events
 | `event`      | `STARTED`, `PROCESSING`, `CANCELLED`, `COMPLETED`, `FAILED`, `QUEUED`, `PIN_INPUT_PENDING`, `PIN_INPUT_ERROR` | The different events during the transaction. NOTE: the transaction is only in a 'finished' state when the following events have been sent: `CANCELLED`, `COMPLETED`, `FAILED`, `QUEUED`,`PIN_INPUT_ERROR` |
 | `approved`   | Boolean                                                                                                       | When in `COMPLETED` the transaction can be approved or declined                                                                                                                                           |
 | `message`    | String                                                                                                        | Some extra information regarding                                                                                                                                                                          |
+| `orderId`    | String                                                                                                        | When transaction is approved, you will receive the orderId to query more information from the API                                                                                                         |
+| `ticket`     | Base64-UTF8 String                                                                                            | When transaction is approved, you will receive the ticket of the transaction. You must make it possible to share this ticket via email or print                                                           |
 
 #### HISTORY_LIST
 
