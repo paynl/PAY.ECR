@@ -144,13 +144,14 @@ export function EcrPage(props: Props) {
     }
   };
   const disconnectAction = () => {
+    replySubscription.current?.remove();
+    replySubscription.current = undefined;
+
     appendLog(`Sending ${JSON.stringify({ type: 'ORDER_STOP' })}`);
     NativeEcrBridge.sendMessage({ type: 'ORDER_STOP' }).then(() => {
       NativeEcrBridge.disconnect();
 
       appendLog('Disconnected from ' + props.route.params.terminal.terminalName)
-      replySubscription.current?.remove();
-      replySubscription.current = undefined;
       navigation.goBack();
     });
   };
