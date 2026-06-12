@@ -1,0 +1,65 @@
+import {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
+import { format } from 'date-fns';
+
+interface LogContextType {
+  logs: string[];
+  appendLog: (message: string) => void;
+}
+
+const LogContext = createContext<LogContextType | undefined>(undefined);
+
+interface LogProviderProps {
+  children: ReactNode;
+  maxLogs?: number;
+}
+
+const formatLogs = (message: string): string => {
+  return `[${format(new Date(), 'HH:mm:ss')}] ${message}`;
+};
+
+export const LogProvider: React.FC<LogProviderProps> = ({ children, maxLogs = 500 }) => {
+  const [logs, setLogs] = useState<string[]>([]);
+  const logsRef = useRef(logs);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    logsRef.current = logs;
+  }, [logs]);
+
+  const appendLog = useCallback(
+    (message: string) => {
+      setLogs(prev => {
+        const updated = [...prev, formatLogs(message)];
+        // Trim if exceeds max
+        if (updated.length > maxLogs) {
+          return updated.slice(-maxLogs);
+        }
+        return updated;
+      });
+    },
+    [maxLogs],
+  );
+
+  const value: LogContextType = {
+    logs,
+    appendLog
+  };
+
+  return <LogContext.Provider value={value}>{children}</LogContext.Provider>;
+};
+
+export const useLogs = (): LogContextType => {
+  const context = useContext(LogContext);
+  if (!context) {
+    throw new Error('useLogs must be used within a LogProvider');
+  }
+  return context;
+};
