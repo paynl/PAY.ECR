@@ -16,7 +16,7 @@
 This repo also includes example application to show you how to integrate with the LocalECR:
 
 - [Desktop (NodeJS HTTP)](./exampleDesktop)
-- [Mobile (React Native - iOS only)](./examplereactnative)
+- [Mobile (React Native - Native TCP/UDP integration)](./examplereactnative)
 
 ### Order presentation screen
 
