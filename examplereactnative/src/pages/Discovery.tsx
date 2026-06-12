@@ -48,6 +48,7 @@ export default function DiscoveryPage() {
   };
 
   const terminalSelected = (terminal: PosTerminal) => {
+    NativeEcrBridge.stopDiscovering();
     navigation.navigate('Ecr', { terminal });
   }
 

@@ -28,11 +28,12 @@ public class DiscoveryManager {
     private static final int DISCOVERY_TIMEOUT_MS = 5000;
     private static final int BUFFER_SIZE = 65536;
 
+    private static final String BROADCAST_ADDRESS = "255.255.255.255";
+
     private final Handler onDiscoverHandler;
 
     private DatagramSocket socket;
     private Thread receiveThread;
-    private String[] localSubnet; // [base, count]
     private String localIP;
     private volatile boolean isDiscovering = false;
 
@@ -47,14 +48,13 @@ public class DiscoveryManager {
     public void startDiscovery() {
         Log.i(TAG, "Start PAYNL discovery protocol");
 
-        // Discover local subnet and IP
-        String[] subnet = discoverLocalSubnet();
-        if (subnet == null) {
-            Log.e(TAG, "Failed to discover local subnet");
+        // Discover local IP
+        localIP = discoverLocalIP();
+        if (localIP == null) {
+            Log.e(TAG, "Failed to discover local IP");
             return;
         }
-        localSubnet = subnet;
-        Log.i(TAG, "Local subnet: " + subnet[0] + ".0/24 (self: " + localIP + ")");
+        Log.i(TAG, "Local IP: " + localIP);
 
         if (!startListening()) {
             Log.e(TAG, "Failed to start listening");
@@ -74,7 +74,7 @@ public class DiscoveryManager {
         closeSocket();
     }
 
-    private String[] discoverLocalSubnet() {
+    private String discoverLocalIP() {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
 
@@ -118,9 +118,8 @@ public class DiscoveryManager {
             for (String preferred : preferredOrder) {
                 for (NetworkInterfaceEntry entry : foundInterfaces) {
                     if (entry.name.equals(preferred)) {
-                        localIP = entry.ip;
                         Log.i(TAG, "Using interface: " + entry.name + " (" + entry.ip + ")");
-                        return parseSubnet(entry.ip);
+                        return entry.ip;
                     }
                 }
             }
@@ -128,8 +127,7 @@ public class DiscoveryManager {
             // Use first found interface
             if (!foundInterfaces.isEmpty()) {
                 NetworkInterfaceEntry first = foundInterfaces.get(0);
-                localIP = first.ip;
-                return parseSubnet(first.ip);
+                return first.ip;
             }
 
         } catch (SocketException e) {
@@ -150,80 +148,21 @@ public class DiscoveryManager {
     }
 
     /**
-     * Parse IP address to extract subnet (e.g., "192.168.100.19" -> ("192.168.100", 254))
-     */
-    private String[] parseSubnet(String ip) {
-        String[] parts = ip.split("\\.");
-        if (parts.length != 4) {
-            return null;
-        }
-
-        try {
-            for (String part : parts) {
-                Integer.parseInt(part);
-            }
-        } catch (NumberFormatException e) {
-            return null;
-        }
-
-        String base = parts[0] + "." + parts[1] + "." + parts[2];
-        return new String[]{base, "254"};
-    }
-
-    /**
-     * Send discovery message to all IPs in the subnet (except ourselves)
+     * Send discovery broadcast to 255.255.255.255
      */
     private boolean broadcastDiscovery() {
-        if (localSubnet == null) {
-            return false;
-        }
-
-        String subnetBase = localSubnet[0];
-        int count = Integer.parseInt(localSubnet[1]);
-
-        Log.i(TAG, "Sending discovery to all hosts in " + subnetBase + ".0/24");
-
-        int startIP = 1;
-        int endIP = count;
-
-        int successCount = 0;
-        int skippedCount = 0;
+        Log.i(TAG, "Sending discovery broadcast to " + BROADCAST_ADDRESS + ":" + UDP_PORT);
 
         byte[] data = WHO_IS_MESSAGE.getBytes();
 
-        for (int host = startIP; host <= endIP; host++) {
-            String targetIP = subnetBase + "." + host;
-
-            // Skip our own IP address
-            if (targetIP.equals(localIP)) {
-                skippedCount++;
-                continue;
-            }
-
-            if (sendUnicast(data, targetIP, UDP_PORT)) {
-                successCount++;
-            }
-        }
-
-        Log.i(TAG, "Sent discovery to " + successCount + " hosts (skipped self: " + skippedCount + ")");
-        return successCount > 0;
-    }
-
-    /**
-     * Send message to specific IP (unicast)
-     */
-    private boolean sendUnicast(byte[] data, String ip, int port) {
-        if (socket == null || !socket.isBound()) {
-            return false;
-        }
-
         try {
-            InetAddress address = InetAddress.getByName(ip);
-            DatagramPacket packet = new DatagramPacket(data, data.length, address, port);
+            InetAddress broadcastAddress = InetAddress.getByName(BROADCAST_ADDRESS);
+            DatagramPacket packet = new DatagramPacket(data, data.length, broadcastAddress, UDP_PORT);
             socket.send(packet);
+            Log.i(TAG, "Broadcast sent successfully");
             return true;
         } catch (IOException e) {
-            Log.e(TAG, "Error sending unicast to " + ip + ": " + e.getMessage());
+            Log.e(TAG, "Error sending broadcast: " + e.getMessage());
             return false;
         }
     }
@@ -244,12 +183,9 @@ public class DiscoveryManager {
             return false;
         }
 
-        receiveThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                receiveLoop();
-            }
-        });
+        isDiscovering = true;
+
+        receiveThread = new Thread(this::receiveLoop);
         receiveThread.start();
 
         return true;
@@ -262,6 +198,9 @@ public class DiscoveryManager {
 
             // Set SO_REUSEADDR
             socket.setReuseAddress(true);
+
+            // Enable SO_BROADCAST for broadcast messages
+            socket.setBroadcast(true);
 
             // Set receive timeout to detect cancellation
             socket.setSoTimeout(1000);

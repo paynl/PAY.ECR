@@ -18,6 +18,12 @@ import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableMap;
+import com.google.gson.JsonObject;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
 
 public class NativeEcrBridge extends NativeEcrBridgeSpec {
     private final String TAG = "NativeEcrBridge";
@@ -57,8 +63,20 @@ public class NativeEcrBridge extends NativeEcrBridgeSpec {
                         return;
                     }
 
+                    JSONObject reply = (JSONObject) msg.obj;
                     // Create map for packet
                     WritableMap payload = Arguments.createMap();
+
+                    Iterator<String> it = reply.keys();
+                    while (it.hasNext()) {
+                        String key = it.next();
+                        try {
+                            payload.putString(key, reply.getString(key));
+                        } catch (JSONException e) {
+                            Log.e(TAG, "Failed to get Json string element: " + e);
+                        }
+                    }
+
                     emitOnReply(payload);
                 }
             };

@@ -47,9 +47,8 @@ public class MessageManager {
     private final ExecutorService executor;
     private final Handler mainHandler;
     private final AtomicBoolean isConnected;
-
-    // Connection callbacks
     private Promise connectionCallback;
+    private Thread receiveThread;
 
     public MessageManager(Handler onReply) {
         this.onReply = onReply;
@@ -58,24 +57,10 @@ public class MessageManager {
         this.isConnected = new AtomicBoolean(false);
     }
 
-    /**
-     * Callback interface for promise resolution
-     */
-    public interface PromiseCallback {
-        void onResolve(Object result);
-        void onReject(String code, String message, Exception error);
-    }
-
-    /**
-     * Get currently connected terminal
-     */
     public PosTerminal getStatus() {
         return connectedTerminal;
     }
 
-    /**
-     * Connect to a terminal
-     */
     public void connect(PosTerminal terminal, Promise promise) {
         Log.i(TAG, "Connecting to " + terminal.sourceIp);
 
@@ -83,7 +68,7 @@ public class MessageManager {
 
         connectedTerminal = terminal;
         connectionCallback = promise;
-        isConnected.set(true);
+        isConnected.set(false);
 
         executor.execute(new Runnable() {
             @Override
@@ -123,33 +108,33 @@ public class MessageManager {
             isConnected.set(true);
 
             // Notify success on main thread
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (connectionCallback != null) {
-                        connectionCallback.resolve(null);
-                        connectionCallback = null;
-                    }
+            mainHandler.post(() -> {
+                if (connectionCallback != null) {
+                    connectionCallback.resolve(null);
+                    connectionCallback = null;
                 }
             });
 
             Log.i(TAG, "Connection opened");
 
-            // Start listening for responses
-            startReceiving();
+            // Start receiving on a SEPARATE thread, not the executor thread
+            receiveThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    startReceiving();
+                }
+            });
+            receiveThread.start();
 
         } catch (final IOException e) {
             Log.e(TAG, "Connection failed: " + e.getMessage());
 
             isConnected.set(false);
 
-            mainHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    if (connectionCallback != null) {
-                        connectionCallback.reject("ConnectionFailed", e.getMessage(), e);
-                        connectionCallback = null;
-                    }
+            mainHandler.post(() -> {
+                if (connectionCallback != null) {
+                    connectionCallback.reject("ConnectionFailed", e.getMessage(), e);
+                    connectionCallback = null;
                 }
             });
 
@@ -157,9 +142,6 @@ public class MessageManager {
         }
     }
 
-    /**
-     * Disconnect from server
-     */
     public void disconnect() {
         String sourceIp = connectedTerminal != null ? connectedTerminal.sourceIp : "unknown";
         Log.i(TAG, "Disconnecting from " + sourceIp);
@@ -212,41 +194,48 @@ public class MessageManager {
         }
 
         connectedTerminal = null;
+
+        // Interrupt receive thread
+        if (receiveThread != null) {
+            receiveThread.interrupt();
+            receiveThread = null;
+        }
     }
 
-    /**
-     * Send message to server
-     */
-    public void send(final PosMessage message) {
-        if (!isConnected.get() || writer == null) {
+    public void send(PosMessage message) {
+        String jsonString = new Gson().toJson(message);
+        Log.i(TAG, "Sending message: " + jsonString);
+
+        executor.execute(() -> doSend(jsonString));
+    }
+
+    private void doSend(String jsonString) {
+        if (!isConnected.get()) {
             Log.e(TAG, "Cannot send - not connected");
             return;
         }
 
-        executor.execute(new Runnable() {
-            @Override
-            public void run() {
-                doSend(message);
-            }
-        });
-    }
+        if (writer == null) {
+            Log.e(TAG, "Cannot send - writer is null");
+            return;
+        }
 
-    private void doSend(PosMessage message) {
         try {
-            // Convert message to JSON
-            String jsonString = new Gson().toJson(message);
+            synchronized (this) {
+                if (writer == null) {
+                    Log.e(TAG, "Cannot send - writer is null (sync)");
+                    return;
+                }
 
-            // Append newline (LF) for message submission
-            jsonString = jsonString + "\n";
+                writer.println(jsonString);
+                writer.flush();
 
-            Log.i(TAG, "Sending message: " + jsonString);
-
-            // Write to socket
-            writer.print(jsonString);
-            writer.flush();
-
+                Log.i(TAG, "Message sent successfully");
+            }
         } catch (Exception e) {
-            Log.e(TAG, "Failed to encode message: " + e.getMessage());
+            Log.e(TAG, "Failed to send message: " + e.getMessage());
+            isConnected.set(false);
+            mainHandler.post(this::disconnect);
         }
     }
 
@@ -254,6 +243,8 @@ public class MessageManager {
      * Receive loop - runs on background thread
      */
     private void startReceiving() {
+        Log.i(TAG, "Receive loop started");
+
         while (isConnected.get() && socket != null && !socket.isClosed()) {
             try {
                 String line = reader.readLine();
@@ -285,16 +276,16 @@ public class MessageManager {
                     Log.e(TAG, "Receive error: " + e.getMessage());
                 }
                 break;
+            } catch (Exception e) {
+                Log.e(TAG, "Unexpected receive error: " + e.getMessage());
+                break;
             }
         }
 
-        // Connection ended
-        mainHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                disconnect();
-            }
-        });
+        Log.w(TAG, "Connection ended...");
+        isConnected.set(false);
+
+        mainHandler.post(this::disconnect);
     }
 
     public boolean isConnected() {
