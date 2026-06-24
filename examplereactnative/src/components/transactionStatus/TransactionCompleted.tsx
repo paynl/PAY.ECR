@@ -1,14 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TouchableOpacity,
-  Animated,
-  Image,
-  ScrollView,
-  Platform,
-} from 'react-native';
+import { StyleSheet, View, Text, TouchableOpacity, Animated, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Buffer } from 'buffer';
 
@@ -17,6 +8,7 @@ interface TransactionCompletedProps {
   payerMessage: string;
   orderID?: string;
   receipt?: string;
+  captureAction?: () => void;
   goBack?: () => void;
 }
 
@@ -66,19 +58,9 @@ export const TransactionCompleted = (props: TransactionCompletedProps) => {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingBottom: insets.bottom, paddingTop: insets.top },
-      ]}
-    >
-      {/* --- Main Content Area --- */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContentContainer}
-        showsVerticalScrollIndicator={false}
-      >
+    <View style={[styles.container, { paddingBottom: insets.bottom, paddingTop: insets.top }]}>
+      <ScrollView contentContainerStyle={styles.scrollContentContainer} showsVerticalScrollIndicator={false}>
         <View style={styles.contentContainer}>
-          {/* Status Icon */}
           <Animated.View
             style={[
               styles.iconWrapper,
@@ -88,46 +70,17 @@ export const TransactionCompleted = (props: TransactionCompletedProps) => {
               },
             ]}
           >
-            {/* Background Circle */}
-            <View
-              style={[
-                styles.iconBackground,
-                props.approved
-                  ? styles.iconBackgroundSuccess
-                  : styles.iconBackgroundError,
-              ]}
-            />
+            <View style={[styles.iconBackground, props.approved ? styles.iconBackgroundSuccess : styles.iconBackgroundError]} />
 
-            {/* Icon Circle */}
-            <View
-              style={[
-                styles.iconCircle,
-                props.approved
-                  ? styles.iconCircleSuccess
-                  : styles.iconCircleError,
-              ]}
-            >
-              <Text style={styles.iconEmoji}>
-                {props.approved ? '✅' : '❌'}
-              </Text>
+            <View style={[styles.iconCircle, props.approved ? styles.iconCircleSuccess : styles.iconCircleError]}>
+              <Text style={styles.iconEmoji}>{props.approved ? '✅' : '❌'}</Text>
             </View>
           </Animated.View>
 
-          {/* Status Text */}
-          <Animated.View
-            style={[styles.textContainer, { opacity: contentOpacity }]}
-          >
-            <Text
-              style={[
-                styles.title,
-                props.approved ? styles.titleSuccess : styles.titleError,
-              ]}
-            >
-              {props.payerMessage}
-            </Text>
+          <Animated.View style={[styles.textContainer, { opacity: contentOpacity }]}>
+            <Text style={[styles.title, props.approved ? styles.titleSuccess : styles.titleError]}>{props.payerMessage}</Text>
 
-            {/* Order ID */}
-            {props.approved && props.orderID && (
+            {props.orderID && (
               <View style={styles.orderIDContainer}>
                 <Text style={styles.orderIDLabel}>Order ID</Text>
                 <Text style={styles.orderIDValue}>{props.orderID}</Text>
@@ -135,17 +88,17 @@ export const TransactionCompleted = (props: TransactionCompletedProps) => {
             )}
           </Animated.View>
 
-          {/* Receipt */}
           {props.approved && renderReceipt()}
         </View>
       </ScrollView>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.primaryButton}
-          onPress={props.goBack}
-          activeOpacity={0.8}
-        >
+        {props.captureAction && (
+          <TouchableOpacity style={styles.primaryButton} onPress={props.captureAction} activeOpacity={0.8}>
+            <Text style={styles.primaryButtonText}>Capture amount</Text>
+          </TouchableOpacity>
+        )}
+        <TouchableOpacity style={styles.primaryButton} onPress={props.goBack} activeOpacity={0.8}>
           <Text style={styles.primaryButtonText}>Go Back</Text>
         </TouchableOpacity>
       </View>
@@ -341,6 +294,7 @@ const styles = StyleSheet.create({
   buttonContainer: {
     paddingHorizontal: 20,
     paddingBottom: 20,
+    gap: 10
   },
   primaryButton: {
     backgroundColor: '#585FFF',

@@ -1855,7 +1855,51 @@ PODS:
     - React-perflogger (= 0.85.3)
     - React-utils (= 0.85.3)
     - ReactNativeDependencies
+  - ReactNativeCameraKit (18.0.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - ReactNativeDependencies (0.85.3)
+  - RNPermissions (5.6.0):
+    - hermes-engine
+    - RCTRequired
+    - RCTTypeSafety
+    - React-Core
+    - React-Core-prebuilt
+    - React-debug
+    - React-Fabric
+    - React-featureflags
+    - React-graphics
+    - React-ImageManager
+    - React-jsi
+    - React-NativeModulesApple
+    - React-RCTFabric
+    - React-renderercss
+    - React-rendererdebug
+    - React-utils
+    - ReactCodegen
+    - ReactCommon/turbomodule/bridging
+    - ReactCommon/turbomodule/core
+    - ReactNativeDependencies
+    - Yoga
   - RNScreens (4.25.2):
     - hermes-engine
     - RCTRequired
@@ -1981,7 +2025,9 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios/ReactAppDependencyProvider`)
   - ReactCodegen (from `build/generated/ios/ReactCodegen`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - ReactNativeCameraKit (from `../node_modules/react-native-camera-kit`)
   - ReactNativeDependencies (from `../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec`)
+  - RNPermissions (from `../node_modules/react-native-permissions`)
   - RNScreens (from `../node_modules/react-native-screens`)
   - SwiftFormat/CLI (~> 0.58.7)
   - Yoga (from `../node_modules/react-native/ReactCommon/yoga`)
@@ -2138,8 +2184,12 @@ EXTERNAL SOURCES:
     :path: build/generated/ios/ReactCodegen
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  ReactNativeCameraKit:
+    :path: "../node_modules/react-native-camera-kit"
   ReactNativeDependencies:
     :podspec: "../node_modules/react-native/third-party-podspecs/ReactNativeDependencies.podspec"
+  RNPermissions:
+    :path: "../node_modules/react-native-permissions"
   RNScreens:
     :path: "../node_modules/react-native-screens"
   Yoga:
@@ -2219,11 +2269,13 @@ SPEC CHECKSUMS:
   ReactAppDependencyProvider: 25c9c516839be2c5e3d3344f95dc7da5f7e63fc2
   ReactCodegen: 8df8251f0ec6c698ecfe00c9a1aa2f4c6a626960
   ReactCommon: 7dfc3250793bf36cf221096ff59e1179e13eef7f
+  ReactNativeCameraKit: cf0ae8d9e1ab991453dbe97c3ba98e69f1f0bc5b
   ReactNativeDependencies: 1fdf57ae29b18ea66b6e09deafa1194077663072
+  RNPermissions: e251bcd321165d9313a3a911cd25f64167b36273
   RNScreens: 991cc417cd396602a6cf59a42139e5a9d91462a9
   SwiftFormat: 101eb1f937296342c837851bed442344261b2860
   Yoga: 77dfa8673de2874e1855002ae59c68b8be9b007b
 
-PODFILE CHECKSUM: 9ae4d202b4967a19959eec8628533b5920303b8c
+PODFILE CHECKSUM: 445f4e61b898968c0f82bd774402f951a5ca11c0
 
 COCOAPODS: 1.16.2

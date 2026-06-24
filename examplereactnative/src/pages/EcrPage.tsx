@@ -105,6 +105,7 @@ export function EcrPage(props: Props) {
       products: [],
     },
   });
+  const trxRef = useRef(transaction);
 
   const [quantities, setQuantities] = useState<Record<number, number>>(
     Object.fromEntries(PRODUCTS.map(p => [p.id, 0])),
@@ -139,7 +140,8 @@ export function EcrPage(props: Props) {
     if (response.type === 'TRANSACTION_EVENT' && response.event === 'STARTED') {
       replySubscription.current?.remove();
       replySubscription.current = undefined;
-      navigation.navigate('TransactionStatus', { terminal: props.route.params.terminal });
+      console.log('Transaction: r' + JSON.stringify(transaction));
+      navigation.navigate('TransactionStatus', { terminal: props.route.params.terminal, transactionType: trxRef.current.type, totalAmount: trxRef.current.amount.value });
       return;
     }
   };
@@ -244,6 +246,7 @@ export function EcrPage(props: Props) {
 
     orderUpdateAction(transactionNew);
     setTransaction(transactionNew);
+    trxRef.current = transactionNew;
   }, [quantities]);
 
   useFocusEffect(
@@ -273,6 +276,7 @@ export function EcrPage(props: Props) {
           products: [],
         },
       });
+      console.log('reset transaction...')
 
       return () => {
         replySubscription.current?.remove();

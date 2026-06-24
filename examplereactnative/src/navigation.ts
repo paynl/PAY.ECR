@@ -5,6 +5,7 @@ import { EcrPage } from './pages/EcrPage';
 import { LogViewer } from './pages/BottomSheets/LogViewer';
 import { ErrorView } from './pages/BottomSheets/ErrorView';
 import { TransactionStatus } from './pages/TransactionStatus';
+import { CaptureScreen } from './pages/Capture';
 
 const RootStack = createNativeStackNavigator({
   screens: {
@@ -22,6 +23,12 @@ const RootStack = createNativeStackNavigator({
     },
     TransactionStatus: {
       screen: TransactionStatus,
+      options: {
+        headerShown: false,
+      },
+    },
+    Capture: {
+      screen: CaptureScreen,
       options: {
         headerShown: false,
       },

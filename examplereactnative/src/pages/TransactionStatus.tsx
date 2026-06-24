@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { EventSubscription } from 'react-native/Libraries/vendor/emitter/EventEmitter';
 import NativeEcrBridge, {
+  PayNLTransactionType,
   PosMessage,
   PosReply,
   PosTerminal,
@@ -21,7 +22,9 @@ import { TransactionCancelled } from '../components/transactionStatus/Transactio
 import { TransactionError } from '../components/transactionStatus/TransactionError';
 
 type Props = StaticScreenProps<{
-  terminal: PosTerminal
+  terminal: PosTerminal;
+  transactionType: PayNLTransactionType;
+  totalAmount: number;
 }>;
 
 export const TransactionStatus = (props: Props) => {
@@ -76,6 +79,22 @@ export const TransactionStatus = (props: Props) => {
     resetBack();
   };
 
+  const startCaptureAction = () => {
+    if (transactionStatus !== 'COMPLETED') {
+      console.log('Transaction not yet authorized...')
+      return
+    }
+    if (!orderId) {
+      console.log('Cannot do capture without order id')
+      return;
+    }
+
+    replySubscription.current?.remove();
+    replySubscription.current = undefined;
+
+    navigation.navigate('Capture', { orderId, amount: props.route.params.totalAmount/100, terminal: props.route.params.terminal });
+  };
+
   const resetBack = () => {
     replySubscription.current?.remove();
     replySubscription.current = undefined;
@@ -120,6 +139,7 @@ export const TransactionStatus = (props: Props) => {
           payerMessage={payerMessage}
           goBack={resetBack}
           receipt={receipt}
+          captureAction={props.route.params.transactionType === 'AUTH' ? startCaptureAction : undefined}
           orderID={orderId}
         />
       );
