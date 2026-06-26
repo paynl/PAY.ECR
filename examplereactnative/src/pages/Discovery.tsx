@@ -10,10 +10,12 @@ import NativeEcrBridge, { PosTerminal } from '../../specs/NativeEcrBridge';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { TerminalCard } from "../components/TerminalDetectedCard";
+import { useNetInfo } from '@react-native-community/netinfo';
 
 export default function DiscoveryPage() {
   const inset = useSafeAreaInsets();
   const navigation = useNavigation();
+  const netInfo = useNetInfo();
 
   const [terminals, setTerminals] = useState<PosTerminal[]>([]);
 
@@ -52,29 +54,43 @@ export default function DiscoveryPage() {
     navigation.navigate('Ecr', { terminal });
   }
 
+  const ipAddress = netInfo.details && 'ipAddress' in netInfo.details ? netInfo.details.ipAddress as string : '';
+  const subnet = getSubnet(ipAddress);
   return (
     <View style={{ paddingTop: inset.top }}>
       <View style={styles.header}>
-        <Text style={styles.title}>PAY.POS terminals</Text>
-        <TouchableOpacity
-          style={styles.refreshBtn}
-          onPress={startDiscovering}
-          accessibilityLabel="Refresh scan"
-          accessibilityRole="button"
-        >
+        <View>
+          <Text style={styles.title}>PAY.POS terminals</Text>
+          <Text>Scanning on {subnet}</Text>
+        </View>
+        <TouchableOpacity style={styles.refreshBtn} onPress={startDiscovering} accessibilityLabel="Refresh scan" accessibilityRole="button">
           <Text style={styles.refreshIcon}>↻</Text>
         </TouchableOpacity>
       </View>
       <FlatList
         data={terminals}
-        renderItem={x => (
-          <TerminalCard terminal={x.item} onPress={() => terminalSelected(x.item)} />
-        )}
+        renderItem={x => <TerminalCard terminal={x.item} onPress={() => terminalSelected(x.item)} />}
         keyExtractor={item => item.terminalCode}
         contentContainerStyle={styles.container}
       />
     </View>
   );
+}
+
+function getSubnet(ipAddress: string): string {
+  if (ipAddress.length === 0) {
+    return ipAddress;
+  }
+
+  const parts = ipAddress.split(".");
+
+  // Treat the input as an IPv4 address only if it has exactly 4 octets.
+  if (parts.length === 4) {
+    parts[parts.length - 1] = "x";
+    return parts.join(".");
+  }
+
+  return ipAddress;
 }
 
 const styles = StyleSheet.create({
