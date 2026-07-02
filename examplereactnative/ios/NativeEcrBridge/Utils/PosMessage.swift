@@ -1,5 +1,6 @@
 struct PosMessage: Codable {
     let type: String
+    var hash: String?
     let transaction: PayNLTransaction?
     let service: PayNLService?
     let needle: String?

@@ -122,7 +122,11 @@ export function EcrPage(props: Props) {
     appendLog('Received reply: ' + JSON.stringify(response));
 
     if (response.type === 'ERROR') {
-      navigation.navigate('ErrorView', { message: response.reason || '' });
+      if (response.reason.startsWith('Unauthorized -')) {
+        navigation.navigate('LoginView');
+      } else {
+        navigation.navigate('ErrorView', { message: response.reason || '' });
+      }
       return;
     }
 

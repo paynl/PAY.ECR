@@ -6,6 +6,7 @@ import { LogViewer } from './pages/BottomSheets/LogViewer';
 import { ErrorView } from './pages/BottomSheets/ErrorView';
 import { TransactionStatus } from './pages/TransactionStatus';
 import { CaptureScreen } from './pages/Capture';
+import { LoginView } from './pages/BottomSheets/LoginView';
 
 const RootStack = createNativeStackNavigator({
   screens: {
@@ -31,6 +32,16 @@ const RootStack = createNativeStackNavigator({
       screen: CaptureScreen,
       options: {
         headerShown: false,
+      },
+    },
+    LoginView: {
+      screen: LoginView,
+      options: {
+        presentation: 'formSheet',
+        headerShown: false,
+        sheetAllowedDetents: [0.5],
+        sheetInitialDetentIndex: 1,
+        sheetGrabberVisible: true,
       },
     },
     ErrorView: {

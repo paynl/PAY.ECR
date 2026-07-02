@@ -12,6 +12,7 @@ interface Spec extends TurboModule {
   onDiscovered: EventEmitter<PosTerminal>;
 
   /* Messaging protocol */
+  setPin: (pin: string) => void;
   getStatus: () => PosTerminal | undefined;
   connect: (to: PosTerminal) => Promise<void>;
   disconnect: () => Promise<void>;

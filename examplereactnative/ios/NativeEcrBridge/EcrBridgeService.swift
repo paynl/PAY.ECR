@@ -89,6 +89,10 @@ import Foundation
         ]
     }
 
+    @objc func setPin(code: String) {
+        messageManager.setPincode(code)
+    }
+
     private func parseMessage(data: NSDictionary) -> PosMessage? {
         guard let type = data["type"] as? String else {
             return nil

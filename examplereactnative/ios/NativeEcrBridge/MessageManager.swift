@@ -1,9 +1,12 @@
+import CryptoKit
 import Foundation
 import OSLog
 
 class MessageManager: NSObject {
     private let logger = Logger(subsystem: "com.paynl.ecr", category: "MessageManager")
+    private let jsonEncoder: JSONEncoder
 
+    private var pincode: String?
     private var connectedTerminal: PosTerminal?
     private var connectionCompletion: (RCTPromiseResolveBlock, RCTPromiseRejectBlock)?
     private var inputStream: InputStream?
@@ -11,8 +14,19 @@ class MessageManager: NSObject {
     private let maxBufferSize = 4096
     private let port: UInt32 = 8888
 
+    override init() {
+        jsonEncoder = JSONEncoder()
+        jsonEncoder.outputFormatting = .sortedKeys
+
+        super.init()
+    }
+
     func getStatus() -> PosTerminal? {
         connectedTerminal
+    }
+
+    func setPincode(_ code: String) {
+        pincode = code
     }
 
     func connect(
@@ -65,13 +79,24 @@ class MessageManager: NSObject {
         outputStream?.remove(from: .main, forMode: .default)
         inputStream = nil
         outputStream = nil
+        pincode = nil
         connectedTerminal = nil
     }
 
     // Send message to server
     func send(message: PosMessage) {
         do {
-            var data = try JSONEncoder().encode(message)
+            var message = message
+            if let pincode {
+                let jsonEncoded = try jsonEncoder.encode(message)
+                logger.info("JsonEncoded: \(String(data: jsonEncoded, encoding: .utf8) ?? "EMPTY"), pincode: \(pincode)")
+                let key = SymmetricKey(data: pincode.data(using: .utf8)!)
+                let hash = HMAC<SHA256>.authenticationCode(for: jsonEncoded, using: key)
+
+                message.hash = Data(hash).map { String(format: "%02hhx", $0) }.joined()
+            }
+
+            var data = try jsonEncoder.encode(message)
 
             // append new line (LF) for message submission
             data.append(0x0A)

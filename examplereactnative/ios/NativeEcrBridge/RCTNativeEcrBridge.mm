@@ -58,4 +58,9 @@ static RCTNativeEcrBridge* ecrBridge;
   [[EcrBridgeService shared] sendMessageWithData:message resolver:resolve rejecter:reject];
 }
 
+- (void)setPin:(nonnull NSString *)pin { 
+  [[EcrBridgeService shared] setPinWithCode:pin];
+}
+
+
 @end
