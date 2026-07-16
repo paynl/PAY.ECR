@@ -125,7 +125,11 @@ export function EcrPage(props: Props) {
       if (response.reason.startsWith('Unauthorized -')) {
         navigation.navigate('LoginView');
       } else {
-        navigation.navigate('ErrorView', { message: response.reason || '' });
+        if (response.reason.includes('ORDER_PRESENTATION')) {
+          orderCreateAction()
+        } else {
+          navigation.navigate('ErrorView', { message: response.reason || '' });
+        }
       }
       return;
     }
@@ -133,10 +137,6 @@ export function EcrPage(props: Props) {
     if (response.type === 'PONG') {
       if (response.status === 'IDLE') {
         orderCreateAction();
-      } else if (response.status !== 'ORDER_PRESENTATION') {
-        navigation.navigate('ErrorView', {
-          message: 'Terminal has invalid status: ' + response.status,
-        });
       }
       return
     }

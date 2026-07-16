@@ -138,22 +138,18 @@ class DiscoveryManager {
         var successCount = 0
         var skippedCount = 0
 
-//        for host in startIP ... endIP {
-//            let targetIP = "\(subnet.base).\(host)"
-//
-//            // Skip our own IP address
-//            if targetIP == localIP {
-//                skippedCount += 1
-//                continue
-//            }
-//
-//            if sendUnicast(data: data, to: targetIP, port: udpPort) {
-//                successCount += 1
-//            }
-//        }
+        for host in startIP ... endIP {
+            let targetIP = "\(subnet.base).\(host)"
 
-        if sendUnicast(data: data, to: "192.168.1.135", port: udpPort) {
-            successCount += 1
+            // Skip our own IP address
+            if targetIP == localIP {
+                skippedCount += 1
+                continue
+            }
+
+            if sendUnicast(data: data, to: targetIP, port: udpPort) {
+                successCount += 1
+            }
         }
 
         logger.info("Sent discovery to \(successCount) hosts (skipped self: \(skippedCount))")
