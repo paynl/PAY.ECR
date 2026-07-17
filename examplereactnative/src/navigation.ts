@@ -2,11 +2,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import DiscoveryPage from './pages/Discovery';
 import { createStaticNavigation } from '@react-navigation/native';
 import { EcrPage } from './pages/EcrPage';
-import { LogViewer } from './pages/BottomSheets/LogViewer';
-import { ErrorView } from './pages/BottomSheets/ErrorView';
 import { TransactionStatus } from './pages/TransactionStatus';
 import { CaptureScreen } from './pages/Capture';
-import { LoginView } from './pages/BottomSheets/LoginView';
 
 const RootStack = createNativeStackNavigator({
   screens: {
@@ -32,36 +29,6 @@ const RootStack = createNativeStackNavigator({
       screen: CaptureScreen,
       options: {
         headerShown: false,
-      },
-    },
-    LoginView: {
-      screen: LoginView,
-      options: {
-        presentation: 'formSheet',
-        headerShown: false,
-        sheetAllowedDetents: [0.5],
-        sheetInitialDetentIndex: 1,
-        sheetGrabberVisible: true,
-      },
-    },
-    ErrorView: {
-      screen: ErrorView,
-      options: {
-        presentation: 'formSheet',
-        headerShown: false,
-        sheetAllowedDetents: [0.25, 0.5, 1],
-        sheetInitialDetentIndex: 1,
-        sheetGrabberVisible: true,
-      },
-    },
-    LogViewer: {
-      screen: LogViewer,
-      options: {
-        presentation: 'formSheet',
-        headerShown: false,
-        sheetAllowedDetents: [0.25, 0.5, 1],
-        sheetInitialDetentIndex: 1,
-        sheetGrabberVisible: true,
       },
     },
   },

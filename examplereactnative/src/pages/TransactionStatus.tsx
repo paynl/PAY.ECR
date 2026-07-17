@@ -20,6 +20,7 @@ import { WaitingPinInput } from '../components/transactionStatus/WaitingPinInput
 import { TransactionQueued } from '../components/transactionStatus/TransactionQueued';
 import { TransactionCancelled } from '../components/transactionStatus/TransactionCancelled';
 import { TransactionError } from '../components/transactionStatus/TransactionError';
+import { usePayBottomSheet } from '../context/BottomSheetContext';
 
 type Props = StaticScreenProps<{
   terminal: PosTerminal;
@@ -29,6 +30,7 @@ type Props = StaticScreenProps<{
 
 export const TransactionStatus = (props: Props) => {
   const { appendLog } = useLogs();
+  const {errorView} = usePayBottomSheet();
   const navigation = useNavigation();
   const [transactionStatus, setTransactionStatus] =
     useState<TransactionEvent>('STARTED');
@@ -50,7 +52,7 @@ export const TransactionStatus = (props: Props) => {
 
   const handleReply = (response: PosReply) => {
     if (response.type === 'ERROR') {
-      navigation.navigate('ErrorView', { message: response.reason || '' });
+      errorView.current?.present({message: response.reason || ''});
       return;
     }
 

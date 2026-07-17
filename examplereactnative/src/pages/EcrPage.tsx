@@ -1,22 +1,6 @@
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import NativeEcrBridge, {
-  PayNLTransaction,
-  PayNLTransactionType,
-  PosMessage,
-  PosReply,
-  PosTerminal,
-} from '../../specs/NativeEcrBridge';
-import {
-  StaticScreenProps,
-  useFocusEffect,
-  useNavigation,
-} from '@react-navigation/native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import NativeEcrBridge, { PayNLTransaction, PayNLTransactionType, PosMessage, PosReply, PosTerminal } from '../../specs/NativeEcrBridge';
+import { StaticScreenProps, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +12,7 @@ import InfoIcon from '../components/icons/Info';
 import type { EventSubscription } from 'react-native/Libraries/vendor/emitter/EventEmitter';
 import { SegmentControl } from '../components/SegmentControl';
 import { PayInput } from '../components/Input';
+import { usePayBottomSheet } from '../context/BottomSheetContext';
 
 const PRODUCTS: Product[] = [
   {
@@ -75,7 +60,7 @@ const PRODUCTS: Product[] = [
   {
     id: 8,
     name: 'Frikandel speciaal',
-    price: 51.50,
+    price: 51.5,
     emoji: '🥩',
   },
   {
@@ -93,6 +78,7 @@ type Props = StaticScreenProps<{
 export function EcrPage(props: Props) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { loginView, logView } = usePayBottomSheet();
   const { appendLog } = useLogs();
   const replySubscription = useRef<EventSubscription | undefined>(undefined);
 
@@ -107,9 +93,7 @@ export function EcrPage(props: Props) {
   });
   const trxRef = useRef(transaction);
 
-  const [quantities, setQuantities] = useState<Record<number, number>>(
-    Object.fromEntries(PRODUCTS.map(p => [p.id, 0])),
-  );
+  const [quantities, setQuantities] = useState<Record<number, number>>(Object.fromEntries(PRODUCTS.map(p => [p.id, 0])));
 
   const changeQty = (id: number, delta: number) => {
     setQuantities(prev => ({
@@ -123,12 +107,10 @@ export function EcrPage(props: Props) {
 
     if (response.type === 'ERROR') {
       if (response.reason.startsWith('Unauthorized -')) {
-        navigation.navigate('LoginView');
+        loginView.current?.present();
       } else {
-        if (response.reason.includes('ORDER_PRESENTATION')) {
-          orderCreateAction()
-        } else {
-          navigation.navigate('ErrorView', { message: response.reason || '' });
+        if (!response.reason.includes('ORDER_PRESENTATION')) {
+          orderCreateAction();
         }
       }
       return;
@@ -138,14 +120,18 @@ export function EcrPage(props: Props) {
       if (response.status === 'IDLE') {
         orderCreateAction();
       }
-      return
+      return;
     }
 
     if (response.type === 'TRANSACTION_EVENT' && response.event === 'STARTED') {
       replySubscription.current?.remove();
       replySubscription.current = undefined;
       console.log('Transaction: r' + JSON.stringify(transaction));
-      navigation.navigate('TransactionStatus', { terminal: props.route.params.terminal, transactionType: trxRef.current.type, totalAmount: trxRef.current.amount.value });
+      navigation.navigate('TransactionStatus', {
+        terminal: props.route.params.terminal,
+        transactionType: trxRef.current.type,
+        totalAmount: trxRef.current.amount.value,
+      });
       return;
     }
   };
@@ -157,18 +143,18 @@ export function EcrPage(props: Props) {
     NativeEcrBridge.sendMessage({ type: 'ORDER_STOP' }).then(() => {
       NativeEcrBridge.disconnect();
 
-      appendLog('Disconnected from ' + props.route.params.terminal.terminalName)
+      appendLog('Disconnected from ' + props.route.params.terminal.terminalName);
       navigation.goBack();
     });
   };
 
   const pingAction = () => {
     const message: PosMessage = {
-      type: 'PING'
+      type: 'PING',
     };
     appendLog('Sending : ' + JSON.stringify(message));
     NativeEcrBridge.sendMessage(message);
-  }
+  };
 
   const orderCreateAction = () => {
     const message: PosMessage = {
@@ -193,7 +179,7 @@ export function EcrPage(props: Props) {
   const orderStartAction = () => {
     if (transaction.type === 'REFUND') {
       transactionStartAction();
-      return
+      return;
     }
     const message: PosMessage = {
       type: 'ORDER_START',
@@ -207,13 +193,13 @@ export function EcrPage(props: Props) {
       type: 'ORDER_STOP',
     };
     appendLog('Sending : ' + JSON.stringify(message));
-    NativeEcrBridge.sendMessage(message)
+    NativeEcrBridge.sendMessage(message);
 
     setTimeout(() => {
       const message: PosMessage = {
         type: 'TRANSACTION_START',
         service: undefined,
-        transaction
+        transaction,
       };
 
       appendLog('Sending : ' + JSON.stringify(message));
@@ -231,10 +217,7 @@ export function EcrPage(props: Props) {
     const transactionNew = {
       type: transaction.type,
       amount: {
-        value: products.reduce(
-          (a, b) => a + b.price * 100 * quantities[b.id],
-          0,
-        ),
+        value: products.reduce((a, b) => a + b.price * 100 * quantities[b.id], 0),
         currency: transaction.amount.currency,
       },
       description: transaction.description,
@@ -280,7 +263,7 @@ export function EcrPage(props: Props) {
           products: [],
         },
       });
-      console.log('reset transaction...')
+      console.log('reset transaction...');
 
       return () => {
         replySubscription.current?.remove();
@@ -289,8 +272,7 @@ export function EcrPage(props: Props) {
     }, [props.route?.params?.terminal]),
   );
 
-  const paddedProducts =
-    PRODUCTS.length % 2 !== 0 ? [...PRODUCTS, null] : PRODUCTS;
+  const paddedProducts = PRODUCTS.length % 2 !== 0 ? [...PRODUCTS, null] : PRODUCTS;
 
   const segments: PayNLTransactionType[] = ['PAYMENT', 'REFUND', 'AUTH'];
 
@@ -306,25 +288,17 @@ export function EcrPage(props: Props) {
       <View style={styles.headerRow}>
         <TouchableOpacity onPress={disconnectAction} style={styles.header}>
           <ChevronLeft />
-          <Text style={styles.title}>
-            {props.route.params.terminal.terminalName}
-          </Text>
+          <Text style={styles.title}>{props.route.params.terminal.terminalName}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate('LogViewer')}>
+        <TouchableOpacity onPress={() => logView.current?.present()}>
           <InfoIcon />
         </TouchableOpacity>
       </View>
 
       <View style={styles.topWrapper}>
-        <PayInput
-          placeholder="Description"
-          onChangeText={e => setTransaction(x => ({ ...x, description: e }))}
-        />
-        <PayInput
-          placeholder="Reference"
-          onChangeText={e => setTransaction(x => ({ ...x, reference: e }))}
-        />
+        <PayInput placeholder="Description" onChangeText={e => setTransaction(x => ({ ...x, description: e }))} />
+        <PayInput placeholder="Reference" onChangeText={e => setTransaction(x => ({ ...x, reference: e }))} />
       </View>
 
       <SegmentControl
@@ -354,33 +328,21 @@ export function EcrPage(props: Props) {
       ) : (
         <FlatList
           data={paddedProducts}
-          keyExtractor={(item, index) =>
-            item ? String(item.id) : `ghost-${index}`
-          }
+          keyExtractor={(item, index) => (item ? String(item.id) : `ghost-${index}`)}
           numColumns={2}
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => {
             if (!item) return <View style={[styles.card, styles.cardGhost]} />;
             return (
-              <ProductCard
-                product={item}
-                qty={quantities[item.id]}
-                onDecrement={() => changeQty(item.id, -1)}
-                onIncrement={() => changeQty(item.id, 1)}
-              />
+              <ProductCard product={item} qty={quantities[item.id]} onDecrement={() => changeQty(item.id, -1)} onIncrement={() => changeQty(item.id, 1)} />
             );
           }}
         />
       )}
 
       <View style={styles.buttonWrapper}>
-        <PayButton
-          text={
-            'Start Transaction €' + (transaction.amount.value / 100).toFixed(2)
-          }
-          onPress={orderStartAction}
-        />
+        <PayButton text={'Start Transaction €' + (transaction.amount.value / 100).toFixed(2)} onPress={orderStartAction} />
       </View>
     </View>
   );
@@ -395,11 +357,11 @@ const styles = StyleSheet.create({
   topWrapper: {
     gap: 5,
     marginBottom: 10,
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   refundAmount: {
     marginTop: 20,
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   row: {
     gap: 10,

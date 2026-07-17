@@ -5,21 +5,11 @@ import {
   Text,
   TouchableOpacity,
   LayoutAnimation,
-  Platform,
-  UIManager,
   Animated,
   ViewStyle,
   TextStyle,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 
-// Enable LayoutAnimation on Android
-if (
-  Platform.OS === 'android' &&
-  UIManager.setLayoutAnimationEnabledExperimental
-) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
 
 interface SegmentControlProps {
   segments: string[];

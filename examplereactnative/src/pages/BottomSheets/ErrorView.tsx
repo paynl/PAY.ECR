@@ -1,23 +1,37 @@
-import { StyleSheet, Text, View } from 'react-native';
+import React, { RefObject, useCallback } from 'react';
+import { StyleSheet, Text } from 'react-native';
 import RedCrossIcon from '../../components/icons/Cross';
-import { StaticScreenProps } from '@react-navigation/native';
+import { BottomSheetBackdrop, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet';
+import { BottomSheetDefaultBackdropProps } from '@gorhom/bottom-sheet/src/components/bottomSheetBackdrop/types';
 
-type Props = StaticScreenProps<{
-  message: string;
-}>
+type Props = {
+  bottomSheet: RefObject<BottomSheetModal<{ message: string }> | null>;
+};
 
 export function ErrorView(props: Props) {
+  const renderBackdrop = useCallback((x: BottomSheetDefaultBackdropProps) => <BottomSheetBackdrop {...x} disappearsOnIndex={-1} appearsOnIndex={0} />, []);
+
   return (
-    <View style={styles.background}>
-      <RedCrossIcon />
-      <Text style={styles.title}>Error received</Text>
-      <Text style={styles.text}>{props.route.params.message}</Text>
-    </View>
+    <BottomSheetModal<{ message: string }>
+      ref={props.bottomSheet}
+      snapPoints={['50%']}
+      index={0}
+      backdropComponent={renderBackdrop}
+      enableDynamicSizing={false}
+      children={({data}) => (
+        <BottomSheetView style={styles.contentContainer}>
+          <RedCrossIcon />
+          <Text style={styles.title}>Error received</Text>
+          <Text style={styles.text}>{data?.message}</Text>
+        </BottomSheetView>
+      )}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  background: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 10, paddingTop: 20, paddingHorizontal: 40 },
-  title: { fontSize: 18, fontWeight: 'bold', marginTop: 10 },
-  text: { fontSize: 14, textAlign: 'center' },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
+  contentContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 24 },
+  title: { fontSize: 20, fontWeight: 'bold', marginTop: 16, color: '#d32f2f' },
+  text: { fontSize: 16, textAlign: 'center', marginTop: 8, color: '#666' },
 });
