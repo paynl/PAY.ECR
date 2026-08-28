@@ -1,8 +1,7 @@
-import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import NativeEcrBridge, { PayNLTransaction, PayNLTransactionType, PosMessage, PosReply, PosTerminal } from '../../specs/NativeEcrBridge';
 import { StaticScreenProps, useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useCallback, useEffect, useRef, useState } from 'react';
-
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLogs } from '../context/LoggingContext';
 import { Product, ProductCard } from '../components/ProductCard';
@@ -93,6 +92,8 @@ export function EcrPage(props: Props) {
   });
   const trxRef = useRef(transaction);
 
+  const [syncProducts, setSyncProducts] = useState(false);
+
   const [quantities, setQuantities] = useState<Record<number, number>>(Object.fromEntries(PRODUCTS.map(p => [p.id, 0])));
 
   const changeQty = (id: number, delta: number) => {
@@ -126,7 +127,7 @@ export function EcrPage(props: Props) {
     if (response.type === 'TRANSACTION_EVENT' && response.event === 'STARTED') {
       replySubscription.current?.remove();
       replySubscription.current = undefined;
-      console.log('Transaction: r' + JSON.stringify(transaction));
+      console.log('Transaction: ' + JSON.stringify(transaction));
       navigation.navigate('TransactionStatus', {
         terminal: props.route.params.terminal,
         transactionType: trxRef.current.type,
@@ -176,13 +177,14 @@ export function EcrPage(props: Props) {
     NativeEcrBridge.sendMessage(message);
   };
 
-  const orderStartAction = () => {
+  const orderStartAction = (syncProducts: boolean) => {
     if (transaction.type === 'REFUND') {
       transactionStartAction();
       return;
     }
     const message: PosMessage = {
       type: 'ORDER_START',
+      syncProducts,
     };
     appendLog('Sending : ' + JSON.stringify(message));
     NativeEcrBridge.sendMessage(message);
@@ -214,26 +216,23 @@ export function EcrPage(props: Props) {
 
     const products = PRODUCTS.filter(x => quantities[x.id]);
 
-    const transactionNew = {
-      type: transaction.type,
-      amount: {
-        value: products.reduce((a, b) => a + b.price * 100 * quantities[b.id], 0),
-        currency: transaction.amount.currency,
-      },
-      description: transaction.description,
-      reference: transaction.reference,
-      order: {
-        products: products.map(y => ({
-          description: y.name,
-          price: { value: y.price * 100, currency: 'EUR' },
-          quantity: quantities[y.id],
-        })),
-      },
-    };
+    setTransaction(x => {
+      const newTrx = {
+        ...x,
+        amount: { value: products.reduce((a, b) => a + b.price * 100 * quantities[b.id], 0), currency: 'EUR' },
+        order: {
+          products: products.map(y => ({
+            description: y.name,
+            price: { value: y.price * 100, currency: 'EUR' },
+            quantity: quantities[y.id],
+          })),
+        },
+      };
 
-    orderUpdateAction(transactionNew);
-    setTransaction(transactionNew);
-    trxRef.current = transactionNew;
+      orderUpdateAction(newTrx);
+      trxRef.current = newTrx;
+      return newTrx;
+    });
   }, [quantities]);
 
   useFocusEffect(
@@ -299,16 +298,25 @@ export function EcrPage(props: Props) {
       <View style={styles.topWrapper}>
         <PayInput placeholder="Description" onChangeText={e => setTransaction(x => ({ ...x, description: e }))} />
         <PayInput placeholder="Reference" onChangeText={e => setTransaction(x => ({ ...x, reference: e }))} />
+        <TouchableOpacity style={styles.syncRow} onPress={() => setSyncProducts(v => !v)} activeOpacity={0.7}>
+          <Text style={styles.syncLabel}>Sync products?</Text>
+          <Switch value={syncProducts} onValueChange={setSyncProducts} />
+        </TouchableOpacity>
       </View>
 
       <SegmentControl
         segments={segments}
         selectedIndex={segments.findIndex(x => x === transaction.type)}
         onChange={i => {
-          setTransaction(x => ({
-            ...x,
-            type: segments[i],
-          }));
+          const type = segments[i];
+          setTransaction(x => {
+            const newTrx = { ...x, type };
+
+            orderUpdateAction(newTrx);
+            trxRef.current = newTrx;
+
+            return newTrx
+          });
         }}
       />
       {transaction.type === 'REFUND' ? (
@@ -318,10 +326,11 @@ export function EcrPage(props: Props) {
             keyboardType="number-pad"
             caretHidden
             onChangeText={e =>
-              setTransaction(x => ({
-                ...x,
-                amount: { value: parseFloat(e), currency: 'EUR' },
-              }))
+              setTransaction(x => {
+                const newTrx = { ...x, amount: { value: parseFloat(e), currency: 'EUR' }, };
+                trxRef.current = newTrx;
+                return newTrx
+              })
             }
           />
         </View>
@@ -342,7 +351,7 @@ export function EcrPage(props: Props) {
       )}
 
       <View style={styles.buttonWrapper}>
-        <PayButton text={'Start Transaction €' + (transaction.amount.value / 100).toFixed(2)} onPress={orderStartAction} />
+        <PayButton text={'Start Transaction €' + (transaction.amount.value / 100).toFixed(2)} onPress={() => orderStartAction(syncProducts)} />
       </View>
     </View>
   );
@@ -362,6 +371,16 @@ const styles = StyleSheet.create({
   refundAmount: {
     marginTop: 20,
     marginHorizontal: 20,
+  },
+  syncRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 5,
+  },
+  syncLabel: {
+    fontSize: 16,
+    color: '#333',
   },
   row: {
     gap: 10,

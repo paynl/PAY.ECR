@@ -226,7 +226,7 @@ function checkForm() {
 function getHeaders() {
     return new Headers({
         'X-Terminal-Code': document.getElementById('terminal-list').value.split(':')[1],
-        'X-Sale-Location-Code': document.getElementById('sale-location-list').value
+        'X-Sale-Location-Code': document.getElementById('sale-location-list')?.value
     })
 }
 

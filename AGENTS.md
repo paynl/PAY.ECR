@@ -281,8 +281,13 @@ This is an optional interactive mode where the terminal displays the order to th
 
 **ORDER_START request:**
 ```json
-{ "type": "ORDER_START" }
+{
+  "type": "ORDER_START",
+  "syncProducts": true
+}
 ```
+
+`syncProducts` (boolean, default `false`) tells PAY.POS whether the products from this order should be synced to PayNL. By default PAY.POS removes the products before sending the order to PAY.
 
 After `ORDER_START`, the terminal begins emitting `TRANSACTION_EVENT` messages exactly like a normal `TRANSACTION_START` flow.
 

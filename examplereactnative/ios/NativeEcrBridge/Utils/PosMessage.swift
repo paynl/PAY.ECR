@@ -3,6 +3,7 @@ struct PosMessage: Codable {
     var hash: String?
     let transaction: PayNLTransaction?
     let service: PayNLService?
+    let syncProducts: Bool?
     let needle: String?
 }
 

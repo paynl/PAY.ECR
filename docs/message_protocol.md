@@ -139,6 +139,7 @@ You can create an order once, update it infinite times, start it once, and needs
 In order to transform the order into a transaction and start card scan, send the `ORDER_START` message to the terminal
 
 ##### Request
-| **Property**     | **Type/value**          | **Description** |
-|------------------|-------------------------|-----------------|
-| `type`           | `ORDER_START` (String)  |                 |
+| **Property**   | **Type/value**           | **Description**                                                                                                                                         |
+|----------------|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `type`         | `ORDER_START` (String)   |                                                                                                                                                         |
+| `syncProducts` | boolean (defualt: false) | Let's PAY.POS know whether the products from this order should be synced to PayNL. By default PAY.POS will remove the products before sending it to PAY |

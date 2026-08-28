@@ -153,6 +153,7 @@ import Foundation
             type: type,
             transaction: transaction,
             service: service,
+            syncProducts: data["syncProducts"] as? Bool,
             needle: data["needle"] as? String
         )
     }

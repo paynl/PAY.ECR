@@ -48,7 +48,7 @@ export type PosMessage =
       service: PayNLService | undefined;
     }
   | { type: 'ORDER_STOP' }
-  | { type: 'ORDER_START' };
+  | { type: 'ORDER_START'; syncProducts?: boolean };
 
 export type TransactionEvent = | 'STARTED'
   | 'PROCESSING'

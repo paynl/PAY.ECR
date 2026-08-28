@@ -9,8 +9,16 @@ import {
 } from 'react';
 import { format } from 'date-fns';
 
+export interface LogEntry {
+  timestamp: number;
+  level: 'debug' | 'info' | 'warn' | 'error';
+  message: string;
+  tag: string;
+  line: string;
+}
+
 interface LogContextType {
-  logs: string[];
+  logs: LogEntry[];
   appendLog: (message: string) => void;
 }
 
@@ -21,12 +29,18 @@ interface LogProviderProps {
   maxLogs?: number;
 }
 
-const formatLogs = (message: string): string => {
-  return `[${format(new Date(), 'HH:mm:ss')}] ${message}`;
+const formatLogs = (message: string): LogEntry => {
+  return {
+    timestamp: Date.now(),
+    level: 'info',
+    message,
+    tag: 'PAY.ECR-example',
+    line: `[${format(new Date(), 'HH:mm:ss')}] ${message}`,
+  };
 };
 
 export const LogProvider: React.FC<LogProviderProps> = ({ children, maxLogs = 500 }) => {
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<LogEntry[]>([]);
   const logsRef = useRef(logs);
 
   // Keep ref in sync with state
