@@ -142,4 +142,4 @@ In order to transform the order into a transaction and start card scan, send the
 | **Property**   | **Type/value**           | **Description**                                                                                                                                         |
 |----------------|--------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `type`         | `ORDER_START` (String)   |                                                                                                                                                         |
-| `syncProducts` | boolean (defualt: false) | Let's PAY.POS know whether the products from this order should be synced to PayNL. By default PAY.POS will remove the products before sending it to PAY |
+| `syncProducts` | boolean (default: false) | Let's PAY.POS know whether the products from this order should be synced to PayNL. By default PAY.POS will remove the products before sending it to PAY |
